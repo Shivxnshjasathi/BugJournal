@@ -1,7 +1,7 @@
 package com.example.bugjournal
+
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.ui.graphics.Color
-import com.airbnb.lottie.compose.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -12,25 +12,35 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.bugjournal.ui.theme.AppTypography
 import com.example.bugjournal.ui.theme.Poppins
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuthScreen(navController: NavController) {
+    val auth = Firebase.auth
+    val db = Firebase.firestore
+
+    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var selectedRole by remember { mutableStateOf("Developer") }
+    var expanded by remember { mutableStateOf(false) }
+    val roles = listOf("Developer", "QA", "Student", "Product Manager")
+
     var isLogin by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }  // Track loading state
-    val auth = Firebase.auth
+    var isLoading by remember { mutableStateOf(false) }
 
     fun isValidEmail(email: String): Boolean {
         return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
@@ -44,14 +54,19 @@ fun AuthScreen(navController: NavController) {
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-
-
+        Image(
+            painter = painterResource(id = R.drawable.auth_top),
+            contentDescription = "Top Image",
+            modifier = Modifier
+                .height(300.dp)
+                .fillMaxWidth()
+                .padding(bottom = 24.dp)
+        )
 
         Text(
             text = "Taking notes has never ",
@@ -72,14 +87,82 @@ fun AuthScreen(navController: NavController) {
             modifier = Modifier.padding(bottom = 32.dp)
         )
 
-
         Text(
             text = if (isLogin) "Welcome Back!" else "Create an Account",
-            style = AppTypography.bodyLarge.copy(
-                color = Color.Black,
-            ),
+            style = AppTypography.bodyLarge.copy(color = Color.Black),
             modifier = Modifier.padding(bottom = 32.dp)
         )
+
+        if (!isLogin) {
+            TextField(
+                value = name,
+                onValueChange = {
+                    name = it
+                    errorMessage = ""
+                },
+                label = { Text("Full Name") },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFFF0F0F0)),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = Color.Black,
+                    focusedLabelColor = Color.Black,
+                    unfocusedLabelColor = Color.DarkGray,
+                    cursorColor = Color.Black,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+                TextField(
+                    value = selectedRole,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Role") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFF0F0F0)),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedBorderColor = Color.Black,
+                        focusedLabelColor = Color.Black,
+                        unfocusedLabelColor = Color.DarkGray,
+                        cursorColor = Color.Black,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
+                    )
+                )
+
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    roles.forEach { role ->
+                        DropdownMenuItem(
+                            text = { Text(role) },
+                            onClick = {
+                                selectedRole = role
+                                expanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         TextField(
             value = email,
@@ -89,27 +172,20 @@ fun AuthScreen(navController: NavController) {
             },
             label = { Text("Email") },
             leadingIcon = { Icon(Icons.Filled.Email, contentDescription = "Email Icon") },
+            singleLine = true,
+            isError = email.isNotEmpty() && !isValidEmail(email),
+            enabled = !isLoading,
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp)) // Rounded corners
-                .background(Color(0xFFF0F0F0)),   // Light gray background
-
-            shape = RoundedCornerShape(12.dp),  // Rounded border shape
-            isError = email.isNotEmpty() && !isValidEmail(email),
-            singleLine = true,
-            enabled = !isLoading,
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color(0xFFF0F0F0)),
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = Color.Transparent,
                 focusedBorderColor = Color.Black,
                 errorBorderColor = Color.Red,
-                disabledBorderColor = Color.LightGray,
                 focusedLabelColor = Color.Black,
                 unfocusedLabelColor = Color.DarkGray,
                 cursorColor = Color.Black,
-                disabledTextColor = Color.DarkGray,
-                focusedLeadingIconColor = Color.Black,
-                unfocusedLeadingIconColor = Color.Gray,
-                errorLeadingIconColor = Color.Red,
                 focusedTextColor = Color.Black,
                 unfocusedTextColor = Color.Black
             )
@@ -126,29 +202,23 @@ fun AuthScreen(navController: NavController) {
             label = { Text("Password") },
             leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = "Password Icon") },
             visualTransformation = PasswordVisualTransformation(),
+            singleLine = true,
+            isError = password.isNotEmpty() && !isValidPassword(password),
+            enabled = !isLoading,
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp)) // Rounded corners
+                .clip(RoundedCornerShape(12.dp))
                 .background(Color(0xFFF0F0F0)),
-            isError = password.isNotEmpty() && !isValidPassword(password),
-            singleLine = true,
-            enabled = !isLoading,
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = Color.Transparent,
                 focusedBorderColor = Color.Black,
                 errorBorderColor = Color.Red,
-                disabledBorderColor = Color.LightGray,
                 focusedLabelColor = Color.Black,
                 unfocusedLabelColor = Color.DarkGray,
                 cursorColor = Color.Black,
-                disabledTextColor = Color.DarkGray,
-                focusedLeadingIconColor = Color.Black,
-                unfocusedLeadingIconColor = Color.Gray,
-                errorLeadingIconColor = Color.Red,
                 focusedTextColor = Color.Black,
                 unfocusedTextColor = Color.Black
             )
-
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -160,9 +230,11 @@ fun AuthScreen(navController: NavController) {
                     !isValidEmail(email) -> errorMessage = "Please enter a valid email"
                     password.isBlank() -> errorMessage = "Password cannot be empty"
                     !isValidPassword(password) -> errorMessage = "Password must be at least 6 characters"
+                    !isLogin && name.isBlank() -> errorMessage = "Name cannot be empty"
                     else -> {
                         errorMessage = ""
-                        isLoading = true // Start loading
+                        isLoading = true
+
                         if (isLogin) {
                             auth.signInWithEmailAndPassword(email, password)
                                 .addOnSuccessListener {
@@ -175,9 +247,41 @@ fun AuthScreen(navController: NavController) {
                                 }
                         } else {
                             auth.createUserWithEmailAndPassword(email, password)
-                                .addOnSuccessListener {
-                                    isLoading = false
-                                    navController.navigate("home")
+                                .addOnSuccessListener { result ->
+                                    val firebaseUser = result.user
+
+                                    // 🔧 Update displayName in Firebase Auth
+                                    val profileUpdates = UserProfileChangeRequest.Builder()
+                                        .setDisplayName(name)
+                                        .build()
+
+                                    firebaseUser?.updateProfile(profileUpdates)
+                                        ?.addOnCompleteListener { task ->
+                                            if (task.isSuccessful) {
+                                                // ✅ Save additional data in Firestore
+                                                val userId = firebaseUser.uid
+                                                val userProfile = hashMapOf(
+                                                    "name" to name,
+                                                    "email" to email,
+                                                    "role" to selectedRole
+                                                )
+                                                db.collection("users").document(userId)
+                                                    .set(userProfile)
+                                                    .addOnSuccessListener {
+                                                        isLoading = false
+                                                        navController.navigate("home")
+                                                    }
+                                                    .addOnFailureListener {
+                                                        isLoading = false
+                                                        errorMessage =
+                                                            "Failed to save profile: ${it.message}"
+                                                    }
+                                            } else {
+                                                isLoading = false
+                                                errorMessage =
+                                                    "Failed to update profile: ${task.exception?.message}"
+                                            }
+                                        }
                                 }
                                 .addOnFailureListener {
                                     isLoading = false
@@ -213,7 +317,6 @@ fun AuthScreen(navController: NavController) {
             }
         }
 
-
         TextButton(
             onClick = {
                 isLogin = !isLogin
@@ -223,13 +326,8 @@ fun AuthScreen(navController: NavController) {
             enabled = !isLoading
         ) {
             Text(
-                text = if (isLogin)
-                    "Don't have an account? Sign up"
-                else
-                    "Already have an account? Login",
-                style = AppTypography.bodyLarge.copy(
-                    color = Color.Black,
-                ),
+                text = if (isLogin) "Don't have an account? Sign up" else "Already have an account? Login",
+                style = AppTypography.bodyLarge.copy(color = Color.Black)
             )
         }
 

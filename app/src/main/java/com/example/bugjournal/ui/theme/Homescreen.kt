@@ -7,14 +7,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.*
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,7 +17,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -32,13 +26,15 @@ data class Bug(
     val title: String = "",
     val severity: String = "",
     val tags: List<String> = emptyList(),
-    val description: String = ""
+    val description: String = "",
+    val projectName: String = ""
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
     val user = FirebaseAuth.getInstance().currentUser
+    val userName = user?.displayName ?: "there"
     val context = LocalContext.current
     val db = FirebaseFirestore.getInstance()
 
@@ -64,14 +60,15 @@ fun HomeScreen(navController: NavController) {
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet(
-                modifier = Modifier.background(Color.White) 
+                modifier = Modifier.background(Color.White)
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
-                    text = "Menu",
-                    modifier = Modifier.padding(16.dp),
-                    style = MaterialTheme.typography.titleMedium
+                    text = "Hello, $userName 👋",
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    style = MaterialTheme.typography.titleLarge
                 )
+                Spacer(modifier = Modifier.height(8.dp))
                 Divider()
                 NavigationDrawerItem(
                     label = { Text("Logout") },
@@ -87,8 +84,7 @@ fun HomeScreen(navController: NavController) {
                 )
             }
         }
-    )
-    {
+    ) {
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -101,22 +97,16 @@ fun HomeScreen(navController: NavController) {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
                             Icon(Icons.Default.Menu, contentDescription = "Menu")
                         }
-                    },
-                    actions = {
-
                     }
                 )
             },
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = { navController.navigate("addBug") },
-                    containerColor = Color.Black,     // Black background
-                    contentColor = Color.White        // White icon
+                    containerColor = Color.Black,
+                    contentColor = Color.White
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Bug"
-                    )
+                    Icon(Icons.Default.Add, contentDescription = "Add Bug")
                 }
             }
         ) { innerPadding ->
@@ -131,10 +121,7 @@ fun HomeScreen(navController: NavController) {
                     value = filterTag,
                     onValueChange = { filterTag = it },
                     leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Rounded.Search,
-                            contentDescription = "Search Icon"
-                        )
+                        Icon(Icons.Rounded.Search, contentDescription = "Search Icon")
                     },
                     trailingIcon = {
                         Box(
@@ -159,27 +146,16 @@ fun HomeScreen(navController: NavController) {
                     label = { Text("Search by tag or title") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp)) // Rounded corners
+                        .clip(RoundedCornerShape(12.dp))
                         .background(Color(0xFFF0F0F0)),
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedBorderColor = Color.Transparent,
-                    focusedBorderColor = Color.Black,
-                    errorBorderColor = Color.Red,
-                    disabledBorderColor = Color.LightGray,
-                    focusedLabelColor = Color.Black,
-                    unfocusedLabelColor = Color.DarkGray,
-                    cursorColor = Color.Black,
-                    disabledTextColor = Color.DarkGray,
-                    focusedLeadingIconColor = Color.Black,
-                    unfocusedLeadingIconColor = Color.Gray,
-                    errorLeadingIconColor = Color.Red,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
+                        focusedBorderColor = Color.Black
+                    )
                 )
-                )
+
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Filter bugs based on severity and tag/title filter
                 val filteredBugs = bugs.filter { bug ->
                     val severityMatches = selectedSeverity == "All" || bug.severity.equals(selectedSeverity, ignoreCase = true)
                     val tagMatches = filterTag.isBlank() || bug.tags.any { it.contains(filterTag, ignoreCase = true) }
@@ -187,31 +163,66 @@ fun HomeScreen(navController: NavController) {
                     severityMatches && (tagMatches || titleMatches)
                 }
 
-                LazyColumn {
-                    items(filteredBugs) { bug ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 6.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text("Title: ${bug.title}", style = MaterialTheme.typography.titleMedium)
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text("Severity: ${bug.severity}", fontSize = 14.sp)
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text("Tags: ${bug.tags.joinToString(", ")}", fontSize = 12.sp)
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text("Description: ${bug.description}", fontSize = 12.sp)
+                if (filteredBugs.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 48.dp),
+                        contentAlignment = Alignment.TopCenter
+                    ) {
+                        Text(
+                            text = "Hi $userName 👋\nLooks like you haven’t reported any bugs yet!",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.DarkGray
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(vertical = 8.dp)
+                    ) {
+                        items(filteredBugs) { bug ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 6.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F0F0)),
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text(text = bug.title, style = MaterialTheme.typography.titleMedium, color = Color.Black)
+
+                                    if (bug.projectName.isNotBlank()) {
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text("Project: ${bug.projectName}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                    }
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Divider(color = Color(0xFFE0E0E0), thickness = 1.dp)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("Severity: ${bug.severity}", style = MaterialTheme.typography.bodyMedium, color = Color.DarkGray)
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text("Tags: ${bug.tags.joinToString(", ")}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("Description:", style = MaterialTheme.typography.labelMedium, color = Color.Black)
+                                    Text(bug.description, style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
+                                }
                             }
                         }
                     }
+
                 }
             }
         }
 
         if (showBottomSheet) {
-            ModalBottomSheet(onDismissRequest = { showBottomSheet = false }) {
+            ModalBottomSheet(
+                onDismissRequest = { showBottomSheet = false },
+                containerColor = Color.White,
+                tonalElevation = 4.dp,
+                shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+            ) {
                 Column(Modifier.padding(16.dp)) {
                     Text("Filter by Severity", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(8.dp))
@@ -237,24 +248,45 @@ fun DropdownMenuBox(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
+    Text(
+        text = "Apply Fillter!",
+        style = AppTypography.titleMedium,
+        color = Color.Black
+    )
+
+    Spacer(modifier = Modifier.height(16.dp))
+
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded }
     ) {
-        OutlinedTextField(
+
+
+        TextField(
             value = selected,
             onValueChange = {},
             readOnly = true,
             label = { Text(label) },
-            modifier = Modifier.menuAnchor().fillMaxWidth()
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color(0xFFF0F0F0)),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = Color.Transparent,
+                focusedBorderColor = Color.Black
+            )
         )
+
+
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false }
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.background(Color.White)
         ) {
             options.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option) },
+                    text = { Text(option, color = Color.Black) },
                     onClick = {
                         onSelected(option)
                         expanded = false

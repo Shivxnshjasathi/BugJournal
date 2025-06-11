@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -17,6 +18,11 @@ import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
+fun limitWords(input: String, maxWords: Int = 100): String {
+    val words = input.trim().split("\\s+".toRegex())
+    return if (words.size <= maxWords) input else words.take(maxWords).joinToString(" ")
+}
+
 @Composable
 fun AddBugScreen(navController: NavController) {
     val context = LocalContext.current
@@ -24,6 +30,7 @@ fun AddBugScreen(navController: NavController) {
     val firestore = FirebaseFirestore.getInstance()
 
     var title by remember { mutableStateOf("") }
+    var appname by remember { mutableStateOf("") }
     var bug by remember { mutableStateOf("") }
     var severity by remember { mutableStateOf("Low") }
     var description by remember { mutableStateOf("") }
@@ -34,21 +41,29 @@ fun AddBugScreen(navController: NavController) {
 
     val severityOptions = listOf("Low", "Medium", "High")
     var expanded by remember { mutableStateOf(false) }
+    var loading by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Add Bug") })
+            TopAppBar(
+                title = { Text("Add Bug", color = Color.Black) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White,
+                    titleContentColor = Color.Black
+                )
+            )
         }
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color.White)
                 .padding(padding)
                 .padding(16.dp)
         ) {
-     TextField(value = title, onValueChange = { title = it }, label = { Text("Title") }, modifier = Modifier
+            TextField(value = title, onValueChange = { title = it }, label = { Text("Title") }, modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp)) // Rounded corners
+                .clip(RoundedCornerShape(12.dp))
                 .background(Color(0xFFF0F0F0)),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedBorderColor = Color.Transparent,
@@ -68,9 +83,31 @@ fun AddBugScreen(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-       TextField(value = bug, onValueChange = { bug = it }, label = { Text("Bug") }, modifier = Modifier
+            TextField(value = appname, onValueChange = { appname = it }, label = { Text("Project name") }, modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp)) // Rounded corners
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color(0xFFF0F0F0)),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedBorderColor = Color.Black,
+                    errorBorderColor = Color.Red,
+                    disabledBorderColor = Color.LightGray,
+                    focusedLabelColor = Color.Black,
+                    unfocusedLabelColor = Color.DarkGray,
+                    cursorColor = Color.Black,
+                    disabledTextColor = Color.DarkGray,
+                    focusedLeadingIconColor = Color.Black,
+                    unfocusedLeadingIconColor = Color.Gray,
+                    errorLeadingIconColor = Color.Red,
+                    focusedTextColor = Color.Black,
+                    unfocusedTextColor = Color.Black
+                )
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            TextField(value = bug, onValueChange = { bug = it }, label = { Text("Bug") }, modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
                 .background(Color(0xFFF0F0F0)),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedBorderColor = Color.Transparent,
@@ -98,23 +135,23 @@ fun AddBugScreen(navController: NavController) {
                     label = { Text("Severity") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .menuAnchor().clip(RoundedCornerShape(12.dp)) // Rounded corners
+                        .menuAnchor().clip(RoundedCornerShape(12.dp))
                         .background(Color(0xFFF0F0F0)),
-                            colors = OutlinedTextFieldDefaults.colors(
-                            unfocusedBorderColor = Color.Transparent,
-                    focusedBorderColor = Color.Black,
-                    errorBorderColor = Color.Red,
-                    disabledBorderColor = Color.LightGray,
-                    focusedLabelColor = Color.Black,
-                    unfocusedLabelColor = Color.DarkGray,
-                    cursorColor = Color.Black,
-                    disabledTextColor = Color.DarkGray,
-                    focusedLeadingIconColor = Color.Black,
-                    unfocusedLeadingIconColor = Color.Gray,
-                    errorLeadingIconColor = Color.Red,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-                )
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedBorderColor = Color.Black,
+                        errorBorderColor = Color.Red,
+                        disabledBorderColor = Color.LightGray,
+                        focusedLabelColor = Color.Black,
+                        unfocusedLabelColor = Color.DarkGray,
+                        cursorColor = Color.Black,
+                        disabledTextColor = Color.DarkGray,
+                        focusedLeadingIconColor = Color.Black,
+                        unfocusedLeadingIconColor = Color.Gray,
+                        errorLeadingIconColor = Color.Red,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
+                    )
                 )
                 ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                     severityOptions.forEach {
@@ -130,9 +167,9 @@ fun AddBugScreen(navController: NavController) {
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            TextField(value = description, onValueChange = { description = it }, label = { Text("Description") }, modifier = Modifier
+            TextField(value = limitWords(description), onValueChange = { description = limitWords(it) }, label = { Text("Description (max 100 words)") }, modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp)) // Rounded corners
+                .clip(RoundedCornerShape(12.dp))
                 .background(Color(0xFFF0F0F0)),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedBorderColor = Color.Transparent,
@@ -151,9 +188,9 @@ fun AddBugScreen(navController: NavController) {
                 )
             )
             Spacer(modifier = Modifier.height(8.dp))
-           TextField(value = environment, onValueChange = { environment = it }, label = { Text("Environment") }, modifier = Modifier
+            TextField(value = environment, onValueChange = { environment = limitWords(it) }, label = { Text("Environment (max 100 words)") }, modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp)) // Rounded corners
+                .clip(RoundedCornerShape(12.dp))
                 .background(Color(0xFFF0F0F0)),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedBorderColor = Color.Transparent,
@@ -172,9 +209,9 @@ fun AddBugScreen(navController: NavController) {
                 )
             )
             Spacer(modifier = Modifier.height(8.dp))
-          TextField(value = steps, onValueChange = { steps = it }, label = { Text("Steps to Reproduce") }, modifier = Modifier
+            TextField(value = steps, onValueChange = { steps = limitWords(it) }, label = { Text("Steps to Reproduce (max 100 words)") }, modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp)) // Rounded corners
+                .clip(RoundedCornerShape(12.dp))
                 .background(Color(0xFFF0F0F0)),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedBorderColor = Color.Transparent,
@@ -193,9 +230,9 @@ fun AddBugScreen(navController: NavController) {
                 )
             )
             Spacer(modifier = Modifier.height(8.dp))
-            TextField(value = resolution, onValueChange = { resolution = it }, label = { Text("Resolution") },modifier = Modifier
+            TextField(value = resolution, onValueChange = { resolution = limitWords(it) }, label = { Text("Resolution (max 100 words)") },modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp)) // Rounded corners
+                .clip(RoundedCornerShape(12.dp))
                 .background(Color(0xFFF0F0F0)),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedBorderColor = Color.Transparent,
@@ -216,7 +253,7 @@ fun AddBugScreen(navController: NavController) {
             Spacer(modifier = Modifier.height(8.dp))
             TextField(value = tags, onValueChange = { tags = it }, label = { Text("Tags (comma-separated)") }, modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp)) // Rounded corners
+                .clip(RoundedCornerShape(12.dp))
                 .background(Color(0xFFF0F0F0)),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedBorderColor = Color.Transparent,
@@ -236,49 +273,70 @@ fun AddBugScreen(navController: NavController) {
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = {
-                    if (user != null) {
-                        val bugData = hashMapOf(
-                            "title" to title,
-                            "bug" to bug,
-                            "severity" to severity,
-                            "description" to description,
-                            "environment" to environment,
-                            "steps" to steps,
-                            "resolution" to resolution,
-                            "tags" to tags.split(",").map { it.trim() },
-                            "timestamp" to System.currentTimeMillis()
-                        )
 
-                        firestore.collection("users")
-                            .document(user.uid)
-                            .collection("bugs")
-                            .add(bugData)
-                            .addOnSuccessListener {
-                                Toast.makeText(context, "Bug added", Toast.LENGTH_SHORT).show()
-                                navController.popBackStack()
+            if (loading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color.Black)
+                }
+            } else {
+                Button(
+                    onClick = {
+                        if (user != null) {
+                            if (title.isBlank() || appname.isBlank() || bug.isBlank() ||
+                                description.isBlank() || environment.isBlank() || steps.isBlank() || resolution.isBlank()) {
+                                Toast.makeText(context, "Please fill in all required fields", Toast.LENGTH_SHORT).show()
+                                return@Button
                             }
-                            .addOnFailureListener {
-                                Toast.makeText(context, "Failed to add bug", Toast.LENGTH_SHORT).show()
-                            }
-                    } else {
-                        Toast.makeText(context, "User not logged in", Toast.LENGTH_SHORT).show()
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                shape = MaterialTheme.shapes.medium,
 
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Black,
-                    contentColor = Color.White,
-                    disabledContainerColor = Color.LightGray,
-                    disabledContentColor = Color.Gray
-                )
-            ) {
-                Text("Add Bug")
+                            loading = true
+                            val bugData = hashMapOf(
+                                "title" to title,
+                                "appname" to appname,
+                                "bug" to bug,
+                                "severity" to severity,
+                                "description" to description,
+                                "environment" to environment,
+                                "steps" to steps,
+                                "resolution" to resolution,
+                                "tags" to tags.split(",").map { it.trim() },
+                                "timestamp" to System.currentTimeMillis()
+                            )
+
+                            firestore.collection("users")
+                                .document(user.uid)
+                                .collection("bugs")
+                                .add(bugData)
+                                .addOnSuccessListener {
+                                    loading = false
+                                    Toast.makeText(context, "Bug added", Toast.LENGTH_SHORT).show()
+                                    navController.popBackStack()
+                                }
+                                .addOnFailureListener {
+                                    loading = false
+                                    Toast.makeText(context, "Failed to add bug", Toast.LENGTH_SHORT).show()
+                                }
+                        } else {
+                            Toast.makeText(context, "User not logged in", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Black,
+                        contentColor = Color.White,
+                        disabledContainerColor = Color.LightGray,
+                        disabledContentColor = Color.Gray
+                    )
+                ) {
+                    Text("Add Bug")
+                }
             }
         }
     }
