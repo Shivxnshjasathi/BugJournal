@@ -1,7 +1,10 @@
 package com.example.bugjournal.ui.theme
 
+import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -22,13 +25,21 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 
+// Bug model
+
 data class Bug(
+    val id: String = "",
     val title: String = "",
+    val appname: String = "",
     val severity: String = "",
-    val tags: List<String> = emptyList(),
+    val environment: String = "",
+    val steps: String = "",
+    val resolution: String = "",
     val description: String = "",
-    val projectName: String = ""
+    val tags: List<String> = emptyList(),
+    val timestamp: Long = 0L
 )
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,18 +48,22 @@ fun HomeScreen(navController: NavController) {
     val userName = user?.displayName ?: "there"
     val context = LocalContext.current
     val db = FirebaseFirestore.getInstance()
+    val scope = rememberCoroutineScope()
 
     var bugs by remember { mutableStateOf<List<Bug>>(emptyList()) }
     var selectedSeverity by remember { mutableStateOf("All") }
     var filterTag by remember { mutableStateOf("") }
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
     var showBottomSheet by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) }
+    var isDeleting by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     LaunchedEffect(user) {
         user?.uid?.let { uid ->
             db.collection("users").document(uid).collection("bugs")
                 .addSnapshotListener { snapshot, e ->
+                    isLoading = false
                     if (e == null && snapshot != null) {
                         bugs = snapshot.documents.mapNotNull { it.toObject(Bug::class.java) }
                     }
@@ -100,6 +115,7 @@ fun HomeScreen(navController: NavController) {
                     }
                 )
             },
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = { navController.navigate("addBug") },
@@ -150,7 +166,12 @@ fun HomeScreen(navController: NavController) {
                         .background(Color(0xFFF0F0F0)),
                     colors = OutlinedTextFieldDefaults.colors(
                         unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = Color.Black
+                        focusedBorderColor = Color.Black,
+                        focusedLabelColor = Color.Black,
+                        unfocusedLabelColor = Color.DarkGray,
+                        cursorColor = Color.Black,
+                        focusedTextColor = Color.Black,
+                        unfocusedTextColor = Color.Black
                     )
                 )
 
@@ -163,11 +184,16 @@ fun HomeScreen(navController: NavController) {
                     severityMatches && (tagMatches || titleMatches)
                 }
 
-                if (filteredBugs.isEmpty()) {
+                if (isLoading) {
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(top = 48.dp),
+                        modifier = Modifier.fillMaxSize().padding(top = 48.dp),
+                        contentAlignment = Alignment.TopCenter
+                    ) {
+                        CircularProgressIndicator(color = Color.Black)
+                    }
+                } else if (filteredBugs.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize().padding(top = 48.dp),
                         contentAlignment = Alignment.TopCenter
                     ) {
                         Text(
@@ -186,34 +212,74 @@ fun HomeScreen(navController: NavController) {
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 6.dp),
+                                    .padding(vertical = 6.dp)
+                                    .clickable {
+                                        if (bug.title.isNotBlank()) {
+                                            val encodedTitle = Uri.encode(bug.title)
+                                            navController.navigate("bugDetail/${Uri.encode(bug.title)}")
+
+                                        } else {
+                                            Log.e("BugNavigation", "Bug title is blank, cannot navigate.")
+                                        }
+                                    },
                                 shape = RoundedCornerShape(12.dp),
                                 colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F0F0)),
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
-                                    Text(text = bug.title, style = MaterialTheme.typography.titleMedium, color = Color.Black)
-
-                                    if (bug.projectName.isNotBlank()) {
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text("Project: ${bug.projectName}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(
+                                            text = bug.title,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = Color.Black,
+                                            modifier = Modifier.weight(1f)
+                                        )
                                     }
+
+//                                    if (bug.appname.isNotBlank()) {
+//                                        Spacer(modifier = Modifier.height(4.dp))
+//                                        Text(
+//                                            "Project: ${bug.appname}",
+//                                            style = MaterialTheme.typography.bodySmall,
+//                                            color = Color.Gray
+//                                        )
+//                                    }
 
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Divider(color = Color(0xFFE0E0E0), thickness = 1.dp)
+//                                    Spacer(modifier = Modifier.height(8.dp))
+//                                    Text(
+//                                        "Severity: ${bug.severity}",
+//                                        style = MaterialTheme.typography.bodyMedium,
+//                                        color = Color.DarkGray
+//                                    )
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    Text("Severity: ${bug.severity}", style = MaterialTheme.typography.bodyMedium, color = Color.DarkGray)
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text("Tags: ${bug.tags.joinToString(", ")}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text("Description:", style = MaterialTheme.typography.labelMedium, color = Color.Black)
-                                    Text(bug.description, style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
+                                    Text(
+                                        "Description:",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = Color.Black
+                                    )
+                                    Text(
+                                        text = if (bug.description.length > 100)
+                                            bug.description.take(100) + "..."
+                                        else
+                                            bug.description,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.DarkGray
+                                    )
+
+
                                 }
                             }
                         }
                     }
 
+
                 }
-            }
+                }
         }
 
         if (showBottomSheet) {
@@ -235,6 +301,15 @@ fun HomeScreen(navController: NavController) {
                 }
             }
         }
+
+        if (isDeleting) {
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.Black)
+            }
+        }
     }
 }
 
@@ -248,36 +323,29 @@ fun DropdownMenuBox(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    Text(
-        text = "Apply Fillter!",
-        style = AppTypography.titleMedium,
-        color = Color.Black
-    )
-
+    Text("Apply Filter!", style = MaterialTheme.typography.titleMedium, color = Color.Black)
     Spacer(modifier = Modifier.height(16.dp))
 
     ExposedDropdownMenuBox(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded }
     ) {
-
-
         TextField(
             value = selected,
             onValueChange = {},
             readOnly = true,
             label = { Text(label) },
-            modifier = Modifier
-                .menuAnchor()
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFFF0F0F0)),
+            modifier = Modifier.menuAnchor().fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color(0xFFF0F0F0)),
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = Color.Transparent,
-                focusedBorderColor = Color.Black
+                focusedBorderColor = Color.Black,
+                focusedLabelColor = Color.Black,
+                unfocusedLabelColor = Color.DarkGray,
+                cursorColor = Color.Black,
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black
             )
         )
-
 
         ExposedDropdownMenu(
             expanded = expanded,
@@ -296,3 +364,4 @@ fun DropdownMenuBox(
         }
     }
 }
+

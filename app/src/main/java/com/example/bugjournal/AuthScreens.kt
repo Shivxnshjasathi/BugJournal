@@ -63,7 +63,7 @@ fun AuthScreen(navController: NavController) {
             painter = painterResource(id = R.drawable.auth_top),
             contentDescription = "Top Image",
             modifier = Modifier
-                .height(300.dp)
+                .height(250.dp)
                 .fillMaxWidth()
                 .padding(bottom = 24.dp)
         )

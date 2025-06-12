@@ -167,7 +167,7 @@ fun AddBugScreen(navController: NavController) {
             }
 
             Spacer(modifier = Modifier.height(8.dp))
-            TextField(value = limitWords(description), onValueChange = { description = limitWords(it) }, label = { Text("Description (max 100 words)") }, modifier = Modifier
+            TextField(value = limitWords(description), onValueChange = { description = limitWords(it) }, label = { Text("Description") }, modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color(0xFFF0F0F0)),
@@ -188,7 +188,7 @@ fun AddBugScreen(navController: NavController) {
                 )
             )
             Spacer(modifier = Modifier.height(8.dp))
-            TextField(value = environment, onValueChange = { environment = limitWords(it) }, label = { Text("Environment (max 100 words)") }, modifier = Modifier
+            TextField(value = environment, onValueChange = { environment = limitWords(it) }, label = { Text("Environment") }, modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color(0xFFF0F0F0)),
@@ -209,7 +209,7 @@ fun AddBugScreen(navController: NavController) {
                 )
             )
             Spacer(modifier = Modifier.height(8.dp))
-            TextField(value = steps, onValueChange = { steps = limitWords(it) }, label = { Text("Steps to Reproduce (max 100 words)") }, modifier = Modifier
+            TextField(value = steps, onValueChange = { steps = limitWords(it) }, label = { Text("Steps to Reproduce") }, modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color(0xFFF0F0F0)),
@@ -230,7 +230,7 @@ fun AddBugScreen(navController: NavController) {
                 )
             )
             Spacer(modifier = Modifier.height(8.dp))
-            TextField(value = resolution, onValueChange = { resolution = limitWords(it) }, label = { Text("Resolution (max 100 words)") },modifier = Modifier
+            TextField(value = resolution, onValueChange = { resolution = limitWords(it) }, label = { Text("Resolution") },modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color(0xFFF0F0F0)),
