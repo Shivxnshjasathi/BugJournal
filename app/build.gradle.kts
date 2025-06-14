@@ -71,10 +71,7 @@ dependencies {
     implementation ("androidx.compose.material:material-icons-extended:1.6.1")
     implementation ("androidx.compose.material3:material3:1.2.1")
     implementation ("com.airbnb.android:lottie-compose:6.1.0")
-
-
-
-
-
+    implementation("com.google.ai.client.generativeai:generativeai:0.2.0")
+    implementation("com.github.jeziellago:compose-markdown:0.3.4")
 
 }
