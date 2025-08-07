@@ -12,7 +12,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -53,7 +52,7 @@ fun AuthScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -71,7 +70,6 @@ fun AuthScreen(navController: NavController) {
         Text(
             text = "Taking notes has never ",
             style = AppTypography.titleLarge.copy(
-                color = Color.Black,
                 fontWeight = FontWeight.Bold,
                 fontFamily = Poppins
             ),
@@ -81,7 +79,6 @@ fun AuthScreen(navController: NavController) {
         Text(
             text = "been easier!",
             style = AppTypography.titleLarge.copy(
-                color = Color.Black,
                 fontWeight = FontWeight.Bold
             ),
             modifier = Modifier.padding(bottom = 32.dp)
@@ -89,7 +86,7 @@ fun AuthScreen(navController: NavController) {
 
         Text(
             text = if (isLogin) "Welcome Back!" else "Create an Account",
-            style = AppTypography.bodyLarge.copy(color = Color.Black),
+            style = AppTypography.bodyLarge,
             modifier = Modifier.padding(bottom = 32.dp)
         )
 
@@ -104,16 +101,13 @@ fun AuthScreen(navController: NavController) {
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFF0F0F0)),
+                    .clip(RoundedCornerShape(12.dp)),
                 colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color.Transparent,
-                    focusedBorderColor = Color.Black,
-                    focusedLabelColor = Color.Black,
-                    unfocusedLabelColor = Color.DarkGray,
-                    cursorColor = Color.Black,
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
+                    unfocusedBorderColor = MaterialTheme.colorScheme.surface,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    cursorColor = MaterialTheme.colorScheme.primary
                 )
             )
 
@@ -132,16 +126,13 @@ fun AuthScreen(navController: NavController) {
                     modifier = Modifier
                         .menuAnchor()
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFF0F0F0)),
+                        .clip(RoundedCornerShape(12.dp)),
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = Color.Black,
-                        focusedLabelColor = Color.Black,
-                        unfocusedLabelColor = Color.DarkGray,
-                        cursorColor = Color.Black,
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black
+                        unfocusedBorderColor = MaterialTheme.colorScheme.surface,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        cursorColor = MaterialTheme.colorScheme.primary
                     )
                 )
 
@@ -177,17 +168,14 @@ fun AuthScreen(navController: NavController) {
             enabled = !isLoading,
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFFF0F0F0)),
+                .clip(RoundedCornerShape(12.dp)),
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = Color.Transparent,
-                focusedBorderColor = Color.Black,
-                errorBorderColor = Color.Red,
-                focusedLabelColor = Color.Black,
-                unfocusedLabelColor = Color.DarkGray,
-                cursorColor = Color.Black,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
+                unfocusedBorderColor = MaterialTheme.colorScheme.surface,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                errorBorderColor = MaterialTheme.colorScheme.error,
+                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                cursorColor = MaterialTheme.colorScheme.primary
             )
         )
 
@@ -207,17 +195,14 @@ fun AuthScreen(navController: NavController) {
             enabled = !isLoading,
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color(0xFFF0F0F0)),
+                .clip(RoundedCornerShape(12.dp)),
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = Color.Transparent,
-                focusedBorderColor = Color.Black,
-                errorBorderColor = Color.Red,
-                focusedLabelColor = Color.Black,
-                unfocusedLabelColor = Color.DarkGray,
-                cursorColor = Color.Black,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
+                unfocusedBorderColor = MaterialTheme.colorScheme.surface,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                errorBorderColor = MaterialTheme.colorScheme.error,
+                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                cursorColor = MaterialTheme.colorScheme.primary
             )
         )
 
@@ -297,15 +282,12 @@ fun AuthScreen(navController: NavController) {
             shape = MaterialTheme.shapes.medium,
             enabled = !isLoading,
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Black,
-                contentColor = Color.White,
-                disabledContainerColor = Color.LightGray,
-                disabledContentColor = Color.Gray
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
             )
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
-                    color = Color.White,
                     strokeWidth = 2.dp,
                     modifier = Modifier.size(24.dp)
                 )
@@ -327,7 +309,7 @@ fun AuthScreen(navController: NavController) {
         ) {
             Text(
                 text = if (isLogin) "Don't have an account? Sign up" else "Already have an account? Login",
-                style = AppTypography.bodyLarge.copy(color = Color.Black)
+                style = AppTypography.bodyLarge
             )
         }
 

@@ -10,7 +10,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,6 +23,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.example.bugjournal.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
@@ -75,7 +81,6 @@ fun HomeScreen(navController: NavController) {
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet(
-                modifier = Modifier.background(Color.White)
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
@@ -105,8 +110,8 @@ fun HomeScreen(navController: NavController) {
                 TopAppBar(
                     title = { Text("Bug Journal") },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.White,
-                        titleContentColor = Color.Black
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary
                     ),
                     navigationIcon = {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
@@ -119,8 +124,8 @@ fun HomeScreen(navController: NavController) {
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = { navController.navigate("addBug") },
-                    containerColor = Color.Black,
-                    contentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Bug")
                 }
@@ -129,7 +134,7 @@ fun HomeScreen(navController: NavController) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.White)
+                    .background(MaterialTheme.colorScheme.background)
                     .padding(innerPadding)
                     .padding(16.dp)
             ) {
@@ -144,7 +149,7 @@ fun HomeScreen(navController: NavController) {
                             modifier = Modifier
                                 .size(42.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(Color.Black),
+                                .background(MaterialTheme.colorScheme.primary),
                             contentAlignment = Alignment.Center
                         ) {
                             IconButton(
@@ -154,7 +159,7 @@ fun HomeScreen(navController: NavController) {
                                 Icon(
                                     imageVector = Icons.Default.FilterList,
                                     contentDescription = "Filter",
-                                    tint = Color.White
+                                    tint = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
                         }
@@ -162,16 +167,13 @@ fun HomeScreen(navController: NavController) {
                     label = { Text("Search by tag or title") },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFF0F0F0)),
+                        .clip(RoundedCornerShape(12.dp)),
                     colors = OutlinedTextFieldDefaults.colors(
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedBorderColor = Color.Black,
-                        focusedLabelColor = Color.Black,
-                        unfocusedLabelColor = Color.DarkGray,
-                        cursorColor = Color.Black,
-                        focusedTextColor = Color.Black,
-                        unfocusedTextColor = Color.Black
+                        unfocusedBorderColor = MaterialTheme.colorScheme.surface,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        focusedLabelColor = MaterialTheme.colorScheme.primary,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                        cursorColor = MaterialTheme.colorScheme.primary
                     )
                 )
 
@@ -186,20 +188,29 @@ fun HomeScreen(navController: NavController) {
 
                 if (isLoading) {
                     Box(
-                        modifier = Modifier.fillMaxSize().padding(top = 48.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 48.dp),
                         contentAlignment = Alignment.TopCenter
                     ) {
-                        CircularProgressIndicator(color = Color.Black)
+                        CircularProgressIndicator()
                     }
                 } else if (filteredBugs.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxSize().padding(top = 48.dp),
-                        contentAlignment = Alignment.TopCenter
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 48.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.notes_lotti))
+                        LottieAnimation(
+                            composition = composition,
+                            modifier = Modifier.size(200.dp),
+                            iterations = Int.MAX_VALUE
+                        )
                         Text(
                             text = "Hi $userName 👋\nLooks like you haven’t reported any bugs yet!",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.DarkGray
+                            style = MaterialTheme.typography.titleMedium
                         )
                     }
                 } else {
@@ -223,7 +234,7 @@ fun HomeScreen(navController: NavController) {
                                         }
                                     },
                                 shape = RoundedCornerShape(12.dp),
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F0F0)),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Row(
@@ -234,58 +245,55 @@ fun HomeScreen(navController: NavController) {
                                         Text(
                                             text = bug.title,
                                             style = MaterialTheme.typography.titleSmall,
-                                            color = Color.Black,
                                             modifier = Modifier.weight(1f)
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(severityColor(bug.severity))
+                                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                                        ) {
+                                            Text(
+                                                text = bug.severity,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = Color.White
+                                            )
+                                        }
+                                    }
+
+                                    if (bug.appname.isNotBlank()) {
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            "Project: ${bug.appname}",
+                                            style = MaterialTheme.typography.bodySmall,
                                         )
                                     }
 
-//                                    if (bug.appname.isNotBlank()) {
-//                                        Spacer(modifier = Modifier.height(4.dp))
-//                                        Text(
-//                                            "Project: ${bug.appname}",
-//                                            style = MaterialTheme.typography.bodySmall,
-//                                            color = Color.Gray
-//                                        )
-//                                    }
-
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    Divider(color = Color(0xFFE0E0E0), thickness = 1.dp)
-//                                    Spacer(modifier = Modifier.height(8.dp))
-//                                    Text(
-//                                        "Severity: ${bug.severity}",
-//                                        style = MaterialTheme.typography.bodyMedium,
-//                                        color = Color.DarkGray
-//                                    )
+                                    Divider(thickness = 1.dp)
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(
                                         "Description:",
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = Color.Black
                                     )
                                     Text(
                                         text = if (bug.description.length > 100)
                                             bug.description.take(100) + "..."
                                         else
                                             bug.description,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color.DarkGray
+                                        style = MaterialTheme.typography.bodySmall
                                     )
-
-
                                 }
                             }
                         }
                     }
-
-
                 }
-                }
+            }
         }
 
         if (showBottomSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showBottomSheet = false },
-                containerColor = Color.White,
                 tonalElevation = 4.dp,
                 shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
             ) {
@@ -304,12 +312,24 @@ fun HomeScreen(navController: NavController) {
 
         if (isDeleting) {
             Box(
-                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Color.Black)
+                CircularProgressIndicator()
             }
         }
+    }
+}
+
+@Composable
+fun severityColor(severity: String): Color {
+    return when (severity.lowercase()) {
+        "low" -> Color(0xFF4CAF50) // Green
+        "medium" -> Color(0xFFFFC107) // Amber
+        "high" -> Color(0xFFF44336) // Red
+        else -> Color.Gray
     }
 }
 
@@ -323,7 +343,7 @@ fun DropdownMenuBox(
 ) {
     var expanded by remember { mutableStateOf(false) }
 
-    Text("Apply Filter!", style = MaterialTheme.typography.titleMedium, color = Color.Black)
+    Text("Apply Filter!", style = MaterialTheme.typography.titleMedium)
     Spacer(modifier = Modifier.height(16.dp))
 
     ExposedDropdownMenuBox(
@@ -335,26 +355,26 @@ fun DropdownMenuBox(
             onValueChange = {},
             readOnly = true,
             label = { Text(label) },
-            modifier = Modifier.menuAnchor().fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color(0xFFF0F0F0)),
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp)),
             colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = Color.Transparent,
-                focusedBorderColor = Color.Black,
-                focusedLabelColor = Color.Black,
-                unfocusedLabelColor = Color.DarkGray,
-                cursorColor = Color.Black,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
+                unfocusedBorderColor = MaterialTheme.colorScheme.surface,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                cursorColor = MaterialTheme.colorScheme.primary
             )
         )
 
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.background(Color.White)
+            onDismissRequest = { expanded = false }
         ) {
             options.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option, color = Color.Black) },
+                    text = { Text(option) },
                     onClick = {
                         onSelected(option)
                         expanded = false
