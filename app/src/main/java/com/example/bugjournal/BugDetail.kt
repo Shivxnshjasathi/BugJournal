@@ -11,7 +11,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -79,7 +78,12 @@ fun BugDetailScreen(
                             IconButton(onClick = { navController.popBackStack() }) {
                                 Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                             }
-                        }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                            navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                        )
                     )
                 }
             ) { innerPadding ->
@@ -105,8 +109,7 @@ fun BugDetailScreen(
                                     MarkdownText( // 👈 Markdown rendering here
                                         markdown = suggestion ?: "No suggestion available.",
                                         modifier = Modifier.fillMaxWidth(),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = Color.DarkGray
+                                        style = MaterialTheme.typography.bodyMedium
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -131,11 +134,11 @@ fun BugDetailScreen(
                                             }
                                         }
                                     },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color.Black),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                                     modifier = Modifier.fillMaxWidth(),
                                     enabled = suggestion != null
                                 ) {
-                                    Text("Save Suggestion", color = Color.White)
+                                    Text("Save Suggestion")
                                 }
                             }
                         }
@@ -171,13 +174,12 @@ fun BugDetailScreen(
                         if (suggestion != null) {
                             item {
                                 Spacer(modifier = Modifier.height(16.dp))
-                                Text("AI Suggestion", style = MaterialTheme.typography.titleMedium, color = Color.Black)
+                                Text("AI Suggestion", style = MaterialTheme.typography.titleMedium)
                                 Spacer(modifier = Modifier.height(8.dp))
                                 MarkdownText(
                                     markdown = suggestion ?: "",
                                     modifier = Modifier.fillMaxWidth(),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.DarkGray
+                                    style = MaterialTheme.typography.bodyMedium
                                 )
                             }
                         }
@@ -195,18 +197,18 @@ fun BugDetailScreen(
                                     showBottomSheet = true
                                 }
                             },
-                            containerColor = Color.Black,
+                            containerColor = MaterialTheme.colorScheme.primary,
                             modifier = Modifier
                                 .align(Alignment.BottomStart)
                                 .padding(16.dp)
                         ) {
                             if (isGeminiLoading) {
                                 CircularProgressIndicator(
-                                    color = Color.White,
+                                    color = MaterialTheme.colorScheme.onPrimary,
                                     modifier = Modifier.size(24.dp)
                                 )
                             } else {
-                                Text("AI", color = Color.White)
+                                Text("AI")
                             }
                         }
                     }
@@ -229,18 +231,18 @@ fun BugDetailScreen(
                                     }
                             }
                         },
-                        containerColor = Color.Red,
+                        containerColor = MaterialTheme.colorScheme.error,
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(16.dp)
                     ) {
                         if (isDeleting) {
                             CircularProgressIndicator(
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onError,
                                 modifier = Modifier.size(24.dp)
                             )
                         } else {
-                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.White)
+                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.onError)
                         }
                     }
                 }
@@ -255,9 +257,9 @@ fun BugDetailScreen(
 fun DetailItem(label: String, value: String) {
     if (value.isNotBlank()) {
         Column(modifier = Modifier.padding(vertical = 8.dp)) {
-            Text(label, style = MaterialTheme.typography.labelMedium, color = Color.Gray)
+            Text(label, style = MaterialTheme.typography.labelMedium)
             Spacer(modifier = Modifier.height(4.dp))
-            Text(value, style = MaterialTheme.typography.bodyMedium, color = Color.Black)
+            Text(value, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
